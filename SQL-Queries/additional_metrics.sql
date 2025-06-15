@@ -1,4 +1,4 @@
---  Test Timeliness: Tests Submitted Before/After Deadline (and percentage)
+-- Test Timeliness: Tests Submitted Before/After Deadline (and percentage)
 SELECT
     d_t.test_key,
     d_t.test_name,
@@ -18,7 +18,7 @@ HAVING COUNT(fsta.submission_key) > 0
 ORDER BY
     percentage_submitted_on_time DESC;
 
--- 8. Student Engagement: How many distinct sessions, on average, are used to complete a single test.
+-- Student Engagement: How many distinct sessions, on average, are used to complete a single test.
 SELECT
     fsta.test_key,
     d_t.test_name,
@@ -56,8 +56,7 @@ GROUP BY
 ORDER BY
     count_of_failed_submissions DESC;
 
---Average Time per Question Category/Difficulty (Requires Category/Difficulty in Dim_Question)
---Assuming dim_question has 'question_category' and 'difficulty_level' columns
+--Average Time per Question Category/Difficulty 
 
 SELECT
     d_q.question_category,

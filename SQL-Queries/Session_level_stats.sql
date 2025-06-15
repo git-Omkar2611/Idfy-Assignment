@@ -9,10 +9,10 @@ SELECT
     (UNIX_TIMESTAMP(ds.session_end_time) - UNIX_TIMESTAMP(ds.session_start_time)) AS actual_session_duration_seconds,
     ds.last_active_page,
     ds.is_active,
-    COUNT(DISTINCT fqa.question_key) AS questions_answered_in_session -- How many distinct questions were answered in this session
+    COUNT(DISTINCT fqa.question_key) AS questions_answered_in_session 
 FROM
     mcq_quiz_gold.dim_session_context AS ds
-LEFT JOIN -- Use LEFT JOIN to include sessions even if no questions were answered
+LEFT JOIN 
     mcq_quiz_gold.fact_question_answer AS fqa ON ds.session_key = fqa.session_key
 LEFT JOIN
     mcq_quiz_gold.dim_test AS d_t ON ds.test_key = d_t.test_key

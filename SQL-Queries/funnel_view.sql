@@ -1,6 +1,4 @@
 WITH QuestionOrder AS (
-    -- Assuming dim_question has a 'question_order' column or it can be derived reliably.
-    -- If not, you might need to infer order from question_key or timestamps.
     SELECT
         question_key,
         test_key,
@@ -8,7 +6,7 @@ WITH QuestionOrder AS (
     FROM
         mcq_quiz_gold.dim_question
     WHERE
-        test_key = {your_test_key} -- Filter for the specific test
+        test_key = {your_test_key} 
 ),
 StudentsAtEachStep AS (
     SELECT
@@ -21,7 +19,7 @@ StudentsAtEachStep AS (
         QuestionOrder AS qo ON fqa.question_key = qo.question_key AND fqa.test_key = qo.test_key
     WHERE
         fqa.test_key = {your_test_key}
-    GROUP BY -- Count unique students who reached each question
+    GROUP BY 
         fqa.submission_key, fqa.student_key, qo.question_sequence_num
 ),
 FunnelCounts AS (

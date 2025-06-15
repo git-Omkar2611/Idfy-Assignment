@@ -3,7 +3,7 @@ SELECT
     d_q.question_key,
     d_q.question_text,
     AVG(fqa.time_taken_for_question_seconds) AS average_time_spent_seconds,
-    COUNT(fqa.answer_key) AS total_answer_submissions -- Count of times this question was answered
+    COUNT(fqa.answer_key) AS total_answer_submissions 
 FROM
     mcq_quiz_gold.fact_question_answer AS fqa
 JOIN
