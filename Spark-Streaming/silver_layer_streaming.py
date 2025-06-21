@@ -20,7 +20,7 @@ from pyspark.sql.functions import from_json, col, current_timestamp
 spark = SparkSession.builder.getOrCreate()
 
 TABLE_NAME = "student_test_submission" # Example table
-PRIMARY_KEYS = ["id"]
+PRIMARY_idS = ["id"]
 
 # Read stream from Bronze Delta table
 df_bronze_stream = spark.readStream \
@@ -51,7 +51,7 @@ def process_silver_batch(microBatchOutputDF, batchId):
     silver_table.alias("target") \
         .merge(
             df_cdc_events.filter(col("op").isin("c", "u")).alias("source"),
-            " AND ".join([f"target.{pk} = source.data.{pk}" for pk in PRIMARY_KEYS])
+            " AND ".join([f"target.{pk} = source.data.{pk}" for pk in PRIMARY_idS])
         ) \
         .whenMatchedUpdateAll() \
         .whenNotMatchedInsertAll() \
@@ -60,8 +60,8 @@ def process_silver_batch(microBatchOutputDF, batchId):
     df_deletes = df_cdc_events.filter(col("op") == "d")
     if df_deletes.count() > 0:
         silver_table.alias("target").delete(
-             condition=col(f"target.{PRIMARY_KEYS[0]}").isin(
-                 df_deletes.select(f"old_data.{PRIMARY_KEYS[0]}").rdd.flatMap(lambda x: x).collect()
+             condition=col(f"target.{PRIMARY_idS[0]}").isin(
+                 df_deletes.select(f"old_data.{PRIMARY_idS[0]}").rdd.flatMap(lambda x: x).collect()
              )
         )
 

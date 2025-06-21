@@ -1,10 +1,10 @@
 SELECT
     ds.status_name AS completion_reason,
-    COUNT(DISTINCT fsta.submission_key) AS num_tests_not_completed
+    COUNT(DISTINCT fsta.submission_id) AS num_tests_not_completed
 FROM
     mcq_quiz_gold.fact_student_test_attempt AS fsta
 JOIN
-    mcq_quiz_gold.dim_status AS ds ON fsta.status_key = ds.status_key
+    mcq_quiz_gold.dim_status AS ds ON fsta.status_id = ds.status_id
 WHERE
     fsta.is_test_completed = FALSE
 GROUP BY

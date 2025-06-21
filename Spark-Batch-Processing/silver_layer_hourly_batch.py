@@ -56,7 +56,6 @@ student_source_schema = StructType([
 ])
 
 dim_student_silver_schema = StructType([
-    StructField("student_surrogate_key", LongType(), False),
     StructField("student_id", IntegerType(), False),
     StructField("student_name", StringType(), True),
     StructField("email", StringType(), True),
@@ -73,7 +72,7 @@ dim_student_silver_schema = StructType([
 def process_dimension_scd2_silver_batch(
     source_bronze_table_name: str,       
     target_silver_dim_table_name: str,   
-    natural_key_column: str,             
+    natural_id_column: str,             
     source_record_schema: StructType,    
     target_silver_dim_schema: StructType,
 ):
@@ -99,11 +98,11 @@ def process_dimension_scd2_silver_batch(
                                  ) \
                                  .filter(col("new_data").isNotNull() | col("old_data").isNotNull()) 
 
-    window_spec = Window.partitionBy(col(f"new_data.{natural_key_column}")).orderBy(col("ingestion_timestamp").desc(), col("op_type").desc())
+    window_spec = Window.partitionBy(col(f"new_data.{natural_id_column}")).orderBy(col("ingestion_timestamp").desc(), col("op_type").desc())
     df_latest_changes = df_parsed_cdc.withColumn("rn", row_number().over(window_spec)).filter(col("rn") == 1).drop("rn")
 
     df_source_for_merge = df_latest_changes.select(
-        col(f"new_data.{natural_key_column}").alias(natural_key_column),
+        col(f"new_data.{natural_id_column}").alias(natural_id_column),
         col("new_data.*"), # All columns from the 'after' image
         col("op_type"),
         col("ingestion_timestamp").alias("event_timestamp") # For start_date/end_date
@@ -113,7 +112,7 @@ def process_dimension_scd2_silver_batch(
         print(f"Creating initial Silver dimension table: {silver_table_full_path}")
         initial_records = df_source_for_merge.filter(col("op_type").isin("c", "r")).select(
             monotonically_increasing_id().alias(target_silver_dim_schema.names[0]), # Surrogate key
-            col(natural_key_column), # Natural key from source
+            col(natural_id_column), # Natural key from source
             col("original_columns_from_source.*"), # Conceptual placeholder for actual columns
             col("event_timestamp").alias("start_date"),
             lit(None).cast("timestamp").alias("end_date"),
@@ -129,7 +128,7 @@ def process_dimension_scd2_silver_batch(
     silver_delta_table.alias("target") \
         .merge(
             df_source_for_merge.alias("source"),
-            f"target.{natural_key_column} = source.{natural_key_column} AND target.is_current = true"
+            f"target.{natural_id_column} = source.{natural_id_column} AND target.is_current = true"
         ) \
         .whenMatchedAnd(
             "target.content_hash != source.content_hash OR source.op_type = 'd'"
@@ -138,8 +137,8 @@ def process_dimension_scd2_silver_batch(
             "end_date": col("source.event_timestamp")
         }) \
         .whenNotMatchedInsert(values = {
-            "surrogate_key": monotonically_increasing_id(), # New surrogate key
-            natural_key_column: col(natural_key_column),
+            "surrogate_id": monotonically_increasing_id(), # New surrogate key
+            natural_id_column: col(natural_id_column),
             "other_descriptive_columns": col("source.other_descriptive_columns"), # Conceptual
             "start_date": col("source.event_timestamp"),
             "end_date": lit(None).cast("timestamp"),
@@ -162,7 +161,7 @@ STUDENT_SCD2_COLS = ["student_name", "email", "enrollment_date"]
 process_dimension_scd2_silver_batch(
     source_bronze_table_name="teachers",
     target_silver_dim_table_name="dim_teacher",
-    natural_key_column="id",
+    natural_id_column="id",
     source_record_schema=teacher_source_schema, 
     target_silver_dim_schema=dim_teacher_silver_schema, 
     descriptive_columns_for_hash=TEACHER_SCD2_COLS 
@@ -171,7 +170,7 @@ process_dimension_scd2_silver_batch(
 process_dimension_scd2_silver_batch(
     source_bronze_table_name="students",
     target_silver_dim_table="dim_student",
-    natural_key_column="id",
+    natural_id_column="id",
     source_record_schema=student_source_schema, 
     target_silver_dim_schema=dim_student_silver_schema, 
     descriptive_columns_for_hash=STUDENT_SCD2_COLS 

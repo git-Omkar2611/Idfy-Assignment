@@ -1,31 +1,31 @@
 WITH QuestionOrder AS (
     SELECT
-        question_key,
-        test_key,
-        ROW_NUMBER() OVER (PARTITION BY test_key ORDER BY question_key) AS question_sequence_num
+        question_id,
+        test_id,
+        ROW_NUMBER() OVER (PARTITION BY test_id ORDER BY question_id) AS question_sequence_num
     FROM
         mcq_quiz_gold.dim_question
     WHERE
-        test_key = {your_test_key} 
+        test_id = {your_test_id} 
 ),
 StudentsAtEachStep AS (
     SELECT
-        fqa.submission_key,
-        fqa.student_key,
+        fqa.submission_id,
+        fqa.student_id,
         qo.question_sequence_num
     FROM
         mcq_quiz_gold.fact_question_answer AS fqa
     JOIN
-        QuestionOrder AS qo ON fqa.question_key = qo.question_key AND fqa.test_key = qo.test_key
+        QuestionOrder AS qo ON fqa.question_id = qo.question_id AND fqa.test_id = qo.test_id
     WHERE
-        fqa.test_key = {your_test_key}
+        fqa.test_id = {your_test_id}
     GROUP BY 
-        fqa.submission_key, fqa.student_key, qo.question_sequence_num
+        fqa.submission_id, fqa.student_id, qo.question_sequence_num
 ),
 FunnelCounts AS (
     SELECT
         question_sequence_num,
-        COUNT(DISTINCT student_key) AS students_at_step
+        COUNT(DISTINCT student_id) AS students_at_step
     FROM
         StudentsAtEachStep
     GROUP BY
@@ -33,11 +33,11 @@ FunnelCounts AS (
 ),
 InitialStarters AS (
     SELECT
-        COUNT(DISTINCT student_key) AS total_starters
+        COUNT(DISTINCT student_id) AS total_starters
     FROM
         mcq_quiz_gold.fact_student_test_attempt
     WHERE
-        test_key = {your_test_key}
+        test_id = {your_test_id}
 )
 SELECT
     fc.question_sequence_num,

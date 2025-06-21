@@ -101,30 +101,30 @@ Tables:
 
 Dimension Tables (e.g., mcq_quiz_gold.dim_test, mcq_quiz_gold.dim_student, mcq_quiz_gold.dim_question, mcq_quiz_gold.dim_session_context, mcq_quiz_gold.dim_status, mcq_quiz_gold.dim_date):
 
-Dim_Test: test_key, test_name, description, total_questions, deadline, teacher_id.
+Dim_Test: test_id, test_name, description, total_questions, deadline, teacher_id.
 
-Dim_Student: student_key, student_name, email, enrollment_date.
+Dim_Student: student_id, student_name, email, enrollment_date.
 
-Dim_Question: question_key, test_key, question_text, options, correct_answer, points.
+Dim_Question: question_id, test_id, question_text, options, correct_answer, points.
 
-Dim_Session_Context: session_key, session_start_time, session_end_time, session_ttl_minutes.
+Dim_Session_Context: session_id, session_start_time, session_end_time, session_ttl_minutes.
 
-Dim_Status: status_key, status_name.
+Dim_Status: status_id, status_name.
 
-Dim_Date: Standard date dimension (date_key, full_date, day_of_week, month, year, etc.).
+Dim_Date: Standard date dimension (date_id, full_date, day_of_week, month, year, etc.).
 
 Fact Tables (e.g., mcq_quiz_gold.fact_student_test_attempt, mcq_quiz_gold.fact_question_answer):
 
-Fact_StudentTestAttempt: submission_key (PK), student_key (FK), test_key (FK), session_key (FK), status_key (FK), test_start_timestamp, test_submission_timestamp, is_test_completed (measure), is_test_submitted (measure), total_score (measure), test_duration_seconds (measure).
+Fact_StudentTestAttempt: submission_id (PK), student_id (FK), test_id (FK), session_id (FK), status_id (FK), test_start_timestamp, test_submission_timestamp, is_test_completed (measure), is_test_submitted (measure), total_score (measure), test_duration_seconds (measure).
 
-Fact_QuestionAnswer: answer_key (PK), submission_key (FK), student_key (FK), question_key (FK), is_correct (measure), is_revisited (measure), time_taken_for_question_seconds (measure), question_submission_timestamp.
+Fact_QuestionAnswer: answer_id (PK), submission_id (FK), student_id (FK), question_id (FK), is_correct (measure), is_revisited (measure), time_taken_for_question_seconds (measure), question_submission_timestamp.
 
 4. Key Metrics & Dashboard Insights
 The Gold layer's dimensional model directly supports the required dashboard metrics:
 
-Tests Started/Completed: Count submission_key from Fact_StudentTestAttempt filtered by test_start_timestamp and is_test_completed flags.
+Tests Started/Completed: Count submission_id from Fact_StudentTestAttempt filtered by test_start_timestamp and is_test_completed flags.
 
-Tests Not Completed & Reasons: Count submission_key from Fact_StudentTestAttempt where is_test_completed is false, joined with Dim_Status for reasons.
+Tests Not Completed & Reasons: Count submission_id from Fact_StudentTestAttempt where is_test_completed is false, joined with Dim_Status for reasons.
 
 Timeline per Action (Question):
 
@@ -140,11 +140,11 @@ Session Level Stats: Analyze test_duration_seconds and session counts from Fact_
 
 Question Level Stats:
 
-Most time-consuming: Aggregate time_taken_for_question_seconds from Fact_QuestionAnswer grouped by question_key (joined with Dim_Question for text).
+Most time-consuming: Aggregate time_taken_for_question_seconds from Fact_QuestionAnswer grouped by question_id (joined with Dim_Question for text).
 
-Mostly answered correctly/wrongly: Aggregate is_correct from Fact_QuestionAnswer grouped by question_key.
+Mostly answered correctly/wrongly: Aggregate is_correct from Fact_QuestionAnswer grouped by question_id.
 
-Mostly revisited: Aggregate is_revisited from Fact_QuestionAnswer grouped by question_key.
+Mostly revisited: Aggregate is_revisited from Fact_QuestionAnswer grouped by question_id.
 
 4.1. Refresh Frequency
 Bronze Layer: Real-time (as data arrives from Kafka).
